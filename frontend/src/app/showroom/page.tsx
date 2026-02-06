@@ -5,8 +5,8 @@ import { motion } from "framer-motion";
 import { Search, SlidersHorizontal } from "lucide-react";
 import { Input, Button } from "@/components/ui";
 import { WatchGrid } from "@/components/watch";
-import { DEMO_WATCHES, SHOWROOM_STATS } from "@/data/watches";
 import { useWatchTotalSupply, useAllWatches } from "@/hooks";
+import { parseTokenURI, getAttributeValue } from "@/lib/metadata";
 import type { Watch } from "@/types";
 
 function nftToWatch(
@@ -16,18 +16,35 @@ function nftToWatch(
   index: number
 ): Watch {
   const images = ["/assets/watch-1.png", "/assets/watch-2.png", "/assets/watch-3.png"];
+  const metadata = uri ? parseTokenURI(uri) : null;
+
+  const brand = metadata
+    ? String(getAttributeValue(metadata, "Brand") ?? "Inconnu")
+    : "Inconnu";
+  const model = metadata
+    ? String(getAttributeValue(metadata, "Model") ?? metadata.name ?? `Watch #${tokenId}`)
+    : `NFT #${tokenId}`;
+  const year = metadata
+    ? (getAttributeValue(metadata, "Year") as number | undefined)
+    : undefined;
+  const estimatedValue = metadata
+    ? (getAttributeValue(metadata, "Estimated Value") as number | undefined)
+    : undefined;
+  const serial = metadata
+    ? String(getAttributeValue(metadata, "Serial") ?? `TOKEN-${tokenId}`)
+    : `TOKEN-${tokenId}`;
+
   return {
     id: tokenId,
-    brand: "On-chain",
-    model: uri ? `Watch #${tokenId}` : `NFT #${tokenId}`,
-    serialNumber: `TOKEN-${tokenId}`,
+    brand,
+    model,
+    serialNumber: serial,
     certificateURI: uri ?? "",
-    totalShares: 1,
-    availableShares: 0,
-    pricePerShare: BigInt(0),
-    sharesContract: owner ?? "0x0000000000000000000000000000000000000000",
-    imageUrl: images[index % images.length],
-    description: uri ?? undefined,
+    imageUrl: metadata?.image ?? images[index % images.length],
+    description: metadata?.description,
+    year,
+    estimatedValue,
+    owner: owner ?? undefined,
   };
 }
 
@@ -37,16 +54,16 @@ export default function ShowroomPage() {
   const { data: totalSupply } = useWatchTotalSupply();
   const { tokenIds, uris, owners, isLoading: isLoadingNFTs } = useAllWatches(totalSupply);
 
-  const hasOnChainData = totalSupply !== undefined && totalSupply > BigInt(0);
+  const count = totalSupply !== undefined ? Number(totalSupply) : 0;
 
   const watches = useMemo(() => {
-    if (hasOnChainData && tokenIds.length > 0 && uris && owners) {
+    if (tokenIds.length > 0 && uris && owners) {
       return tokenIds.map((id, i) =>
         nftToWatch(Number(id), uris[i], owners[i], i)
       );
     }
-    return DEMO_WATCHES;
-  }, [hasOnChainData, tokenIds, uris, owners]);
+    return [];
+  }, [tokenIds, uris, owners]);
 
   const filteredWatches = useMemo(
     () =>
@@ -58,14 +75,12 @@ export default function ShowroomPage() {
     [watches, search]
   );
 
-  const stats = hasOnChainData
-    ? [
-        { label: "Montres", value: Number(totalSupply) },
-        { label: "Source", value: "On-chain" },
-        { label: "Réseau", value: "Hardhat" },
-        { label: "Standard", value: "ERC-721" },
-      ]
-    : SHOWROOM_STATS;
+  const stats = [
+    { label: "Montres", value: count },
+    { label: "Source", value: "On-chain" },
+    { label: "Réseau", value: "Hardhat" },
+    { label: "Standard", value: "ERC-721" },
+  ];
 
   return (
     <div className="min-h-screen pt-24 pb-16">
@@ -124,8 +139,18 @@ export default function ShowroomPage() {
           ))}
         </motion.div>
 
-        {/* Grid */}
-        <WatchGrid watches={filteredWatches} isLoading={isLoadingNFTs} />
+        {/* Grid or empty state */}
+        {!isLoadingNFTs && count === 0 ? (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="text-center py-20"
+          >
+            <p className="text-gray-400 text-lg">Aucune montre mintée pour le moment.</p>
+          </motion.div>
+        ) : (
+          <WatchGrid watches={filteredWatches} isLoading={isLoadingNFTs} />
+        )}
       </div>
     </div>
   );
