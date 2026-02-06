@@ -5,6 +5,7 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { ConnectButton } from "@/components/auth";
 
 const navigation = [
   { name: "Accueil", href: "/" },
@@ -71,8 +72,8 @@ export function Header() {
               })}
             </nav>
 
-            {/* Placeholder for future connect button */}
-            <div className="w-24" />
+            {/* Wallet connect */}
+            <ConnectButton />
           </div>
         </div>
       </div>
