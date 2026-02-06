@@ -29,3 +29,11 @@ export function useIsBlacklisted(account: `0x${string}` | undefined) {
     query: { enabled: !!kycRegistryConfig.address && !!account },
   });
 }
+
+export function useKYCOwner() {
+  return useReadContract({
+    ...kycRegistryConfig,
+    functionName: "owner",
+    query: { enabled: !!kycRegistryConfig.address },
+  });
+}

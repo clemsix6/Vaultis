@@ -52,6 +52,22 @@ export function useTokenOfOwnerByIndex(
   });
 }
 
+export function useWatchNFTOwner() {
+  return useReadContract({
+    ...watchNFTConfig,
+    functionName: "owner",
+    query: { enabled: !!watchNFTConfig.address },
+  });
+}
+
+export function useKYCRegistryAddress() {
+  return useReadContract({
+    ...watchNFTConfig,
+    functionName: "kycRegistry",
+    query: { enabled: !!watchNFTConfig.address },
+  });
+}
+
 export function useAllWatches(totalSupply: bigint | undefined) {
   const count = Number(totalSupply ?? BigInt(0));
 
