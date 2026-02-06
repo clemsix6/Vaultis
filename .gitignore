@@ -54,5 +54,3 @@ smart-contracts/coverage/
 smart-contracts/typechain-types/
 smart-contracts/ignition/deployments/
 
-# Generated contract ABIs
-frontend/src/contracts/
