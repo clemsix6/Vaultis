@@ -4,7 +4,10 @@
   "type": "module",
   "scripts": {
     "compile": "npx hardhat compile",
-    "test": "npx hardhat test"
+    "test": "npx hardhat test",
+    "export-abis": "npx hardhat compile && npx tsx scripts/export-abis.ts",
+    "node": "npx hardhat node",
+    "deploy:local": "npx hardhat ignition deploy ignition/modules/Deploy.ts --network localhost"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-ignition": "^3.0.7",

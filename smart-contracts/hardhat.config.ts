@@ -16,6 +16,10 @@ export default defineConfig({
       type: "edr-simulated",
       chainType: "l1",
     },
+    localhost: {
+      type: "http",
+      url: "http://hardhat-node:8545",
+    },
     baseSepolia: {
       type: "http",
       chainType: "op",
