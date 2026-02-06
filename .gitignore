@@ -46,3 +46,10 @@ next-env.d.ts
 .turbo
 
 .claude
+
+# Smart Contracts (Hardhat)
+smart-contracts/artifacts/
+smart-contracts/cache/
+smart-contracts/coverage/
+smart-contracts/typechain-types/
+smart-contracts/ignition/deployments/
