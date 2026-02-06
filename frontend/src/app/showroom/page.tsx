@@ -6,21 +6,66 @@ import { Search, SlidersHorizontal } from "lucide-react";
 import { Input, Button } from "@/components/ui";
 import { WatchGrid } from "@/components/watch";
 import { DEMO_WATCHES, SHOWROOM_STATS } from "@/data/watches";
+import { useWatchTotalSupply, useAllWatches } from "@/hooks";
+import type { Watch } from "@/types";
+
+function nftToWatch(
+  tokenId: number,
+  uri: string | undefined,
+  owner: `0x${string}` | undefined,
+  index: number
+): Watch {
+  const images = ["/assets/watch-1.png", "/assets/watch-2.png", "/assets/watch-3.png"];
+  return {
+    id: tokenId,
+    brand: "On-chain",
+    model: uri ? `Watch #${tokenId}` : `NFT #${tokenId}`,
+    serialNumber: `TOKEN-${tokenId}`,
+    certificateURI: uri ?? "",
+    totalShares: 1,
+    availableShares: 0,
+    pricePerShare: BigInt(0),
+    sharesContract: owner ?? "0x0000000000000000000000000000000000000000",
+    imageUrl: images[index % images.length],
+    description: uri ?? undefined,
+  };
+}
 
 export default function ShowroomPage() {
   const [search, setSearch] = useState("");
-  const [isLoading] = useState(false);
 
-  // Filtrage avec memoization
+  const { data: totalSupply } = useWatchTotalSupply();
+  const { tokenIds, uris, owners, isLoading: isLoadingNFTs } = useAllWatches(totalSupply);
+
+  const hasOnChainData = totalSupply !== undefined && totalSupply > BigInt(0);
+
+  const watches = useMemo(() => {
+    if (hasOnChainData && tokenIds.length > 0 && uris && owners) {
+      return tokenIds.map((id, i) =>
+        nftToWatch(Number(id), uris[i], owners[i], i)
+      );
+    }
+    return DEMO_WATCHES;
+  }, [hasOnChainData, tokenIds, uris, owners]);
+
   const filteredWatches = useMemo(
     () =>
-      DEMO_WATCHES.filter(
+      watches.filter(
         (watch) =>
           watch.brand.toLowerCase().includes(search.toLowerCase()) ||
           watch.model.toLowerCase().includes(search.toLowerCase())
       ),
-    [search]
+    [watches, search]
   );
+
+  const stats = hasOnChainData
+    ? [
+        { label: "Montres", value: Number(totalSupply) },
+        { label: "Source", value: "On-chain" },
+        { label: "Réseau", value: "Hardhat" },
+        { label: "Standard", value: "ERC-721" },
+      ]
+    : SHOWROOM_STATS;
 
   return (
     <div className="min-h-screen pt-24 pb-16">
@@ -68,7 +113,7 @@ export default function ShowroomPage() {
           transition={{ delay: 0.2 }}
           className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12"
         >
-          {SHOWROOM_STATS.map((stat) => (
+          {stats.map((stat) => (
             <div
               key={stat.label}
               className="bg-surface-card border border-border rounded-xl p-4 text-center"
@@ -80,7 +125,7 @@ export default function ShowroomPage() {
         </motion.div>
 
         {/* Grid */}
-        <WatchGrid watches={filteredWatches} isLoading={isLoading} />
+        <WatchGrid watches={filteredWatches} isLoading={isLoadingNFTs} />
       </div>
     </div>
   );

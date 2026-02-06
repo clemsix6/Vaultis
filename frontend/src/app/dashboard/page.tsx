@@ -1,15 +1,45 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Clock, TrendingUp, Wallet } from "lucide-react";
+import { Clock, Shield, ShieldCheck, Wallet } from "lucide-react";
+import { useAccount } from "wagmi";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui";
-import { formatPrice } from "@/lib/utils";
+import { useWatchBalance, useIsAuthorized, useIsWhitelisted, useIsBlacklisted } from "@/hooks";
+import { UserHoldings } from "@/components/dashboard/UserHoldings";
+import { ConnectButton } from "@/components/auth";
 
 export default function DashboardPage() {
-  // Données de démonstration
-  const portfolioValue = 5250;
-  const totalShares = 15;
-  const watchesOwned = 3;
+  const { address, isConnected } = useAccount();
+
+  const { data: balance } = useWatchBalance(address);
+  const { data: isAuthorized } = useIsAuthorized(address);
+  const { data: isWhitelisted } = useIsWhitelisted(address);
+  const { data: isBlacklisted } = useIsBlacklisted(address);
+
+  if (!isConnected) {
+    return (
+      <div className="min-h-screen pt-24 pb-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center py-24"
+          >
+            <Wallet className="w-16 h-16 text-gold mx-auto mb-6" />
+            <h1 className="text-3xl font-bold text-white mb-4">
+              Connectez votre wallet
+            </h1>
+            <p className="text-gray-400 mb-8 max-w-md mx-auto">
+              Pour accéder à votre dashboard, connectez votre wallet MetaMask.
+            </p>
+            <ConnectButton />
+          </motion.div>
+        </div>
+      </div>
+    );
+  }
+
+  const nftCount = balance !== undefined ? Number(balance) : 0;
 
   return (
     <div className="min-h-screen pt-24 pb-16">
@@ -38,38 +68,50 @@ export default function DashboardPage() {
           <Card glow>
             <CardHeader>
               <div className="flex items-center justify-between">
-                <CardTitle>Valeur du Portfolio</CardTitle>
-                <TrendingUp className="w-5 h-5 text-green-500" />
+                <CardTitle>NFTs possédés</CardTitle>
+                <Clock className="w-5 h-5 text-gold" />
               </div>
             </CardHeader>
             <CardContent>
-              <p className="text-3xl font-bold text-white">
-                {formatPrice(portfolioValue)}
-              </p>
-              <p className="text-sm text-green-500 mt-1">+12.5% ce mois</p>
+              <p className="text-3xl font-bold text-white">{nftCount}</p>
+              <p className="text-sm text-gray-400 mt-1">montres tokenisées</p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
-              <CardTitle>Parts possédées</CardTitle>
+              <CardTitle>Statut KYC</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-3xl font-bold text-white">{totalShares}</p>
-              <p className="text-sm text-gray-400 mt-1">sur {watchesOwned} montres</p>
+              <div className="flex items-center gap-2">
+                {isAuthorized ? (
+                  <ShieldCheck className="w-5 h-5 text-green-500" />
+                ) : (
+                  <Shield className="w-5 h-5 text-gray-500" />
+                )}
+                <p className="text-lg font-medium text-white">
+                  {isAuthorized ? "Autorisé" : "Non autorisé"}
+                </p>
+              </div>
+              <p className="text-sm text-gray-400 mt-1">
+                {isWhitelisted ? "Whitelisté" : "Non whitelisté"}
+                {isBlacklisted ? " · Blacklisté" : ""}
+              </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
-              <CardTitle>Statut</CardTitle>
+              <CardTitle>Wallet</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center gap-2">
                 <Wallet className="w-5 h-5 text-gold" />
-                <p className="text-lg font-medium text-white">Demo</p>
+                <p className="text-lg font-medium text-white">Connecté</p>
               </div>
-              <p className="text-sm text-gray-400 mt-1">Wallet non connecté</p>
+              <p className="text-sm text-gray-400 mt-1 font-mono truncate">
+                {address}
+              </p>
             </CardContent>
           </Card>
         </motion.div>
@@ -81,42 +123,13 @@ export default function DashboardPage() {
           transition={{ delay: 0.2 }}
         >
           <h2 className="text-xl font-bold text-white mb-6">Mes Investissements</h2>
-
-          <div className="space-y-4">
-            {[
-              {
-                brand: "Rolex",
-                model: "Submariner Date Blue",
-                shares: 5,
-                value: 750,
-                change: "+8.2%",
-              },
-              {
-                brand: "Rolex",
-                model: "Daytona Green Dial",
-                shares: 3,
-                value: 4500,
-                change: "+15.3%",
-              },
-            ].map((holding, index) => (
-              <Card key={index} className="flex items-center gap-4">
-                <div className="w-16 h-16 rounded-lg bg-surface flex items-center justify-center">
-                  <Clock className="w-8 h-8 text-gold" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm text-gold">{holding.brand}</p>
-                  <p className="font-semibold text-white">{holding.model}</p>
-                  <p className="text-sm text-gray-400">{holding.shares} parts</p>
-                </div>
-                <div className="text-right">
-                  <p className="font-semibold text-white">
-                    {formatPrice(holding.value)}
-                  </p>
-                  <p className="text-sm text-green-500">{holding.change}</p>
-                </div>
-              </Card>
-            ))}
-          </div>
+          {address && balance !== undefined ? (
+            <UserHoldings address={address} balance={balance} />
+          ) : (
+            <div className="text-center py-8">
+              <p className="text-gray-400">Chargement...</p>
+            </div>
+          )}
         </motion.div>
       </div>
     </div>

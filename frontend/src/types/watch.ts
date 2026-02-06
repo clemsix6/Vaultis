@@ -31,3 +31,13 @@ export interface SharesInfo {
   pricePerShare: bigint;
   percentOwned: number;
 }
+
+export interface NFTWatch {
+  tokenId: number;
+  owner: `0x${string}`;
+  tokenURI: string;
+  brand?: string;
+  model?: string;
+  imageUrl?: string;
+  description?: string;
+}
