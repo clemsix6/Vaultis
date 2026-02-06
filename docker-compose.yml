@@ -1,0 +1,42 @@
+services:
+  hardhat-node:
+    build: ./smart-contracts
+    command: npx hardhat node --hostname 0.0.0.0
+    ports:
+      - "8545:8545"
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "8545"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+
+  deployer:
+    build: ./smart-contracts
+    command: sh scripts/deploy-local.sh
+    depends_on:
+      hardhat-node:
+        condition: service_healthy
+    volumes:
+      - contracts-abi:/abi-out
+      - shared:/shared
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      deployer:
+        condition: service_completed_successfully
+    volumes:
+      - contracts-abi:/app/src/contracts
+      - shared:/shared
+    entrypoint: /bin/sh
+    command:
+      - -c
+      - |
+        cp /shared/env-contracts .env.local 2>/dev/null || true
+        npm run dev
+
+volumes:
+  contracts-abi:
+  shared:
