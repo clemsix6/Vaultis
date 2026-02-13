@@ -1,10 +1,11 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Clock, Shield, ShieldCheck, Wallet } from "lucide-react";
+import { Clock, Coins, Shield, ShieldCheck, Wallet } from "lucide-react";
 import { useAccount } from "wagmi";
+import { formatUnits } from "viem";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui";
-import { useWatchBalance, useIsAuthorized, useIsWhitelisted, useIsBlacklisted } from "@/hooks";
+import { useWatchBalance, useIsAuthorized, useIsWhitelisted, useIsBlacklisted, useSharesBalance, useSharesDecimals, useSharesSymbol, useSharesPricePerShare } from "@/hooks";
 import { UserHoldings } from "@/components/dashboard/UserHoldings";
 import { ConnectButton } from "@/components/auth";
 
@@ -15,6 +16,10 @@ export default function DashboardPage() {
   const { data: isAuthorized } = useIsAuthorized(address);
   const { data: isWhitelisted } = useIsWhitelisted(address);
   const { data: isBlacklisted } = useIsBlacklisted(address);
+  const { data: sharesBalance } = useSharesBalance(address);
+  const { data: sharesDecimals } = useSharesDecimals();
+  const { data: sharesSymbol } = useSharesSymbol();
+  const { data: pricePerShare } = useSharesPricePerShare();
 
   if (!isConnected) {
     return (
@@ -63,7 +68,7 @@ export default function DashboardPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8"
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
         >
           <Card glow>
             <CardHeader>
@@ -75,6 +80,28 @@ export default function DashboardPage() {
             <CardContent>
               <p className="text-3xl font-bold text-white">{nftCount}</p>
               <p className="text-sm text-gray-400 mt-1">montres tokenisées</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle>Parts ERC-20</CardTitle>
+                <Coins className="w-5 h-5 text-gold" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <p className="text-3xl font-bold text-white">
+                {sharesBalance !== undefined && sharesDecimals !== undefined
+                  ? formatUnits(sharesBalance, sharesDecimals)
+                  : "0"}
+              </p>
+              <p className="text-sm text-gray-400 mt-1">
+                {sharesSymbol ?? "shares"}
+                {sharesBalance !== undefined && sharesDecimals !== undefined && pricePerShare !== undefined
+                  ? ` (~${(Number(formatUnits(sharesBalance, sharesDecimals)) * Number(pricePerShare) / 100).toFixed(2)} $)`
+                  : ""}
+              </p>
             </CardContent>
           </Card>
 

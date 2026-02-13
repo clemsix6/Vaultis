@@ -4,8 +4,10 @@ import { useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import {
   watchNFTConfig,
   kycRegistryConfig,
+  watchSharesConfig,
   WATCH_NFT_ADDRESS,
   KYC_REGISTRY_ADDRESS,
+  WATCH_SHARES_ADDRESS,
 } from "@/lib/contracts";
 
 export function useMintWatch() {
@@ -181,4 +183,44 @@ export function useSetKYCRegistry() {
   }
 
   return { setKYCRegistry, hash, isPending, isConfirming, isSuccess, error };
+}
+
+// ── WatchShares (ERC-20) ──
+
+export function useTransferShares() {
+  const { data: hash, writeContract, isPending, error } = useWriteContract();
+  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
+    hash,
+  });
+
+  function transfer(to: `0x${string}`, amount: bigint) {
+    if (!WATCH_SHARES_ADDRESS) return;
+    writeContract({
+      address: WATCH_SHARES_ADDRESS,
+      abi: watchSharesConfig.abi,
+      functionName: "transfer",
+      args: [to, amount],
+    });
+  }
+
+  return { transfer, hash, isPending, isConfirming, isSuccess, error };
+}
+
+export function useApproveShares() {
+  const { data: hash, writeContract, isPending, error } = useWriteContract();
+  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
+    hash,
+  });
+
+  function approve(spender: `0x${string}`, amount: bigint) {
+    if (!WATCH_SHARES_ADDRESS) return;
+    writeContract({
+      address: WATCH_SHARES_ADDRESS,
+      abi: watchSharesConfig.abi,
+      functionName: "approve",
+      args: [spender, amount],
+    });
+  }
+
+  return { approve, hash, isPending, isConfirming, isSuccess, error };
 }
