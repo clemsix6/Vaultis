@@ -37,6 +37,11 @@ services:
         if [ -f /shared/env-contracts ]; then
           export $(cat /shared/env-contracts | xargs)
         fi
+        # Map NEXT_PUBLIC_* vars to backend-expected names
+        export KYC_REGISTRY_ADDRESS=$NEXT_PUBLIC_KYC_REGISTRY_ADDRESS
+        export WATCH_NFT_ADDRESS=$NEXT_PUBLIC_WATCH_NFT_ADDRESS
+        export SHARES_ADDRESS=$NEXT_PUBLIC_WATCH_SHARES_ADDRESS
+        export POOL_ADDRESS=$NEXT_PUBLIC_SWAP_POOL_ADDRESS
         export RPC_URL=http://hardhat-node:8545
         export PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
         export FRONTEND_URL=http://localhost:3000
