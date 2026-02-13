@@ -7,7 +7,7 @@ const ROOT = join(__dirname, "..");
 const ARTIFACTS_DIR = join(ROOT, "artifacts", "contracts");
 const OUTPUT_DIR = process.env.ABI_OUTPUT_DIR ?? join(ROOT, "..", "frontend", "src", "contracts");
 
-const CONTRACTS = ["KYCRegistry", "WatchNFT"] as const;
+const CONTRACTS = ["KYCRegistry", "WatchNFT", "WatchShares", "WatchSwapPool"] as const;
 
 function extractABI(contractName: string): unknown[] {
   const contractDir = join(ARTIFACTS_DIR, `${contractName}.sol`);

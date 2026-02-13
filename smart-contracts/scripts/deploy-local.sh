@@ -21,14 +21,20 @@ DEPLOYED_FILE="ignition/deployments/chain-31337/deployed_addresses.json"
 
 KYC_ADDRESS=$(node -e "const d=JSON.parse(require('fs').readFileSync('$DEPLOYED_FILE','utf-8'));console.log(d['DeployModule#KYCRegistry'])")
 NFT_ADDRESS=$(node -e "const d=JSON.parse(require('fs').readFileSync('$DEPLOYED_FILE','utf-8'));console.log(d['DeployModule#WatchNFT'])")
+SHARES_ADDRESS=$(node -e "const d=JSON.parse(require('fs').readFileSync('$DEPLOYED_FILE','utf-8'));console.log(d['DeployModule#WatchShares'])")
+POOL_ADDRESS=$(node -e "const d=JSON.parse(require('fs').readFileSync('$DEPLOYED_FILE','utf-8'));console.log(d['DeployModule#WatchSwapPool'])")
 
 echo "KYCRegistry: $KYC_ADDRESS"
 echo "WatchNFT: $NFT_ADDRESS"
+echo "WatchShares: $SHARES_ADDRESS"
+echo "SwapPool: $POOL_ADDRESS"
 
 mkdir -p /shared
 cat > /shared/env-contracts <<EOF
 NEXT_PUBLIC_WATCH_NFT_ADDRESS=$NFT_ADDRESS
 NEXT_PUBLIC_KYC_REGISTRY_ADDRESS=$KYC_ADDRESS
+NEXT_PUBLIC_WATCH_SHARES_ADDRESS=$SHARES_ADDRESS
+NEXT_PUBLIC_SWAP_POOL_ADDRESS=$POOL_ADDRESS
 NEXT_PUBLIC_CHAIN_ID=31337
 EOF
 

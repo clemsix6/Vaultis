@@ -1,4 +1,4 @@
-import { createPublicClient, createWalletClient, http } from "viem";
+import { createPublicClient, createWalletClient, http, parseEther, parseUnits } from "viem";
 import { hardhat } from "viem/chains";
 import { privateKeyToAccount } from "viem/accounts";
 import { readFileSync } from "node:fs";
@@ -42,6 +42,29 @@ const mintAbi = [
   },
 ] as const;
 
+const approveAbi = [
+  {
+    type: "function",
+    name: "approve",
+    inputs: [
+      { name: "spender", type: "address" },
+      { name: "value", type: "uint256" },
+    ],
+    outputs: [{ type: "bool" }],
+    stateMutability: "nonpayable",
+  },
+] as const;
+
+const addLiquidityAbi = [
+  {
+    type: "function",
+    name: "addLiquidity",
+    inputs: [{ name: "sharesAmount", type: "uint256" }],
+    outputs: [],
+    stateMutability: "payable",
+  },
+] as const;
+
 async function main() {
   const deployedPath = join(
     __dirname,
@@ -55,6 +78,8 @@ async function main() {
 
   const kycRegistryAddress = addresses["DeployModule#KYCRegistry"] as `0x${string}` | undefined;
   const watchNFTAddress = addresses["DeployModule#WatchNFT"] as `0x${string}` | undefined;
+  const watchSharesAddress = addresses["DeployModule#WatchShares"] as `0x${string}` | undefined;
+  const swapPoolAddress = addresses["DeployModule#WatchSwapPool"] as `0x${string}` | undefined;
 
   if (!kycRegistryAddress || !watchNFTAddress) {
     throw new Error("Missing deployed addresses — did deploy succeed?");
@@ -62,6 +87,8 @@ async function main() {
 
   console.log("KYCRegistry:", kycRegistryAddress);
   console.log("WatchNFT:", watchNFTAddress);
+  console.log("WatchShares:", watchSharesAddress ?? "not deployed");
+  console.log("SwapPool:", swapPoolAddress ?? "not deployed");
   console.log("RPC:", RPC_URL);
 
   const account = privateKeyToAccount(DEPLOYER_KEY);
@@ -80,28 +107,67 @@ async function main() {
 
   console.log("Deployer:", account.address);
 
-  // Whitelist deployer on KYCRegistry
+  // ── Step 1: Whitelist deployer ──
   console.log("\nWhitelisting deployer...");
-  const whitelistHash = await walletClient.writeContract({
+  let hash = await walletClient.writeContract({
     address: kycRegistryAddress,
     abi: whitelistAbi,
     functionName: "whitelist",
     args: [account.address],
   });
-  await publicClient.waitForTransactionReceipt({ hash: whitelistHash });
+  await publicClient.waitForTransactionReceipt({ hash });
   console.log("Deployer whitelisted!");
 
-  // Mint demo NFTs
+  // ── Step 2: Whitelist the swap pool (so it can hold KYC-gated shares) ──
+  if (swapPoolAddress) {
+    console.log("\nWhitelisting swap pool...");
+    hash = await walletClient.writeContract({
+      address: kycRegistryAddress,
+      abi: whitelistAbi,
+      functionName: "whitelist",
+      args: [swapPoolAddress],
+    });
+    await publicClient.waitForTransactionReceipt({ hash });
+    console.log("Swap pool whitelisted!");
+  }
+
+  // ── Step 3: Mint demo NFTs ──
   for (let i = 0; i < DEMO_TOKEN_URIS.length; i++) {
-    console.log(`\nMinting NFT #${i} with URI: ${DEMO_TOKEN_URIS[i]}`);
-    const mintHash = await walletClient.writeContract({
+    console.log(`\nMinting NFT #${i}...`);
+    hash = await walletClient.writeContract({
       address: watchNFTAddress,
       abi: mintAbi,
       functionName: "mint",
       args: [account.address, DEMO_TOKEN_URIS[i]],
     });
-    await publicClient.waitForTransactionReceipt({ hash: mintHash });
+    await publicClient.waitForTransactionReceipt({ hash });
     console.log(`NFT #${i} minted!`);
+  }
+
+  // ── Step 4: Add initial liquidity to swap pool ──
+  if (watchSharesAddress && swapPoolAddress) {
+    const sharesAmount = parseUnits("500", 18); // 500 shares
+    const ethAmount = parseEther("5");           // 5 ETH → 1 share = 0.01 ETH
+
+    console.log("\nApproving shares for swap pool...");
+    hash = await walletClient.writeContract({
+      address: watchSharesAddress,
+      abi: approveAbi,
+      functionName: "approve",
+      args: [swapPoolAddress, sharesAmount],
+    });
+    await publicClient.waitForTransactionReceipt({ hash });
+
+    console.log("Adding initial liquidity: 500 WSUB + 5 ETH...");
+    hash = await walletClient.writeContract({
+      address: swapPoolAddress,
+      abi: addLiquidityAbi,
+      functionName: "addLiquidity",
+      args: [sharesAmount],
+      value: ethAmount,
+    });
+    await publicClient.waitForTransactionReceipt({ hash });
+    console.log("Liquidity added! Pool is live.");
   }
 
   console.log("\nSeed complete!");
