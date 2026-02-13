@@ -10,6 +10,9 @@ import { ConnectButton } from "@/components/auth";
 const navigation = [
   { name: "Accueil", href: "/" },
   { name: "Showroom", href: "/showroom" },
+  { name: "Shares", href: "/shares" },
+  { name: "Trade", href: "/trade" },
+  { name: "Activité", href: "/activity" },
   { name: "Dashboard", href: "/dashboard" },
   { name: "Admin", href: "/admin" },
 ];
