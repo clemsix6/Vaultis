@@ -1,5 +1,5 @@
 import { createPublicClient, createWalletClient, http, parseEther, encodeFunctionData } from "viem";
-import { hardhat } from "viem/chains";
+import { hardhat, baseSepolia } from "viem/chains";
 import { privateKeyToAccount } from "viem/accounts";
 import { readFileSync } from "node:fs";
 import { join, dirname } from "node:path";
@@ -7,11 +7,13 @@ import { fileURLToPath } from "node:url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-// Hardhat account #0
-const DEPLOYER_KEY =
-  "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80" as const;
+const CHAIN_ID = Number(process.env.CHAIN_ID ?? "31337");
 
-const RPC_URL = process.env.RPC_URL ?? "http://hardhat-node:8545";
+const DEPLOYER_KEY = (process.env.PRIVATE_KEY
+  ? (process.env.PRIVATE_KEY.startsWith("0x") ? process.env.PRIVATE_KEY : `0x${process.env.PRIVATE_KEY}`)
+  : "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80") as `0x${string}`;
+
+const RPC_URL = process.env.RPC_URL ?? (CHAIN_ID === 84532 ? "https://sepolia.base.org" : "http://hardhat-node:8545");
 
 const DEMO_TOKEN_URIS = [
   "data:application/json;base64,eyJuYW1lIjoiUm9sZXggU3VibWFyaW5lciBEYXRlIEJsdWUiLCJkZXNjcmlwdGlvbiI6IlJvbGV4IFN1Ym1hcmluZXIgRGF0ZSA0MW1tIFJvbGVzb3IsIGNhZHJhbiBibGV1IiwiaW1hZ2UiOiIvYXNzZXRzL3dhdGNoLTEucG5nIiwiYXR0cmlidXRlcyI6W3sidHJhaXRfdHlwZSI6IkJyYW5kIiwidmFsdWUiOiJSb2xleCJ9LHsidHJhaXRfdHlwZSI6Ik1vZGVsIiwidmFsdWUiOiJTdWJtYXJpbmVyIERhdGUgQmx1ZSJ9LHsidHJhaXRfdHlwZSI6IlllYXIiLCJ2YWx1ZSI6MjAyM30seyJ0cmFpdF90eXBlIjoiU2VyaWFsIiwidmFsdWUiOiJBQkMxMjM0NTYifSx7InRyYWl0X3R5cGUiOiJFc3RpbWF0ZWQgVmFsdWUiLCJ2YWx1ZSI6MTUwMDB9XX0=",
@@ -73,7 +75,7 @@ const dexAddLiquidityAbi = [
 
 async function main() {
   const deployedPath = join(
-    __dirname, "..", "ignition", "deployments", "chain-31337", "deployed_addresses.json"
+    __dirname, "..", "ignition", "deployments", `chain-${CHAIN_ID}`, "deployed_addresses.json"
   );
   const addresses = JSON.parse(readFileSync(deployedPath, "utf-8"));
 
@@ -93,10 +95,11 @@ async function main() {
   console.log("RPC:", RPC_URL);
 
   const account = privateKeyToAccount(DEPLOYER_KEY);
+  const chain = CHAIN_ID === 84532 ? baseSepolia : hardhat;
   const transport = http(RPC_URL);
 
-  const publicClient = createPublicClient({ chain: hardhat, transport });
-  const walletClient = createWalletClient({ chain: hardhat, account, transport });
+  const publicClient = createPublicClient({ chain, transport });
+  const walletClient = createWalletClient({ chain, account, transport });
 
   const waitTx = async (hash: `0x${string}`) => {
     await publicClient.waitForTransactionReceipt({ hash });
@@ -142,7 +145,7 @@ async function main() {
 
   // ── 5. Wrap ETH to WETH for liquidity ──
   console.log("\n─── Wrapping ETH to WETH ───");
-  const wethAmount = parseEther("5"); // 5 WETH for liquidity
+  const wethAmount = CHAIN_ID === 84532 ? parseEther("0.01") : parseEther("5");
   await waitTx(await walletClient.writeContract({
     address: wethAddress, abi: wethAbi, functionName: "deposit", args: [], value: wethAmount,
   }));
@@ -165,9 +168,9 @@ async function main() {
   }));
   console.log("DEX whitelisted on KYCRegistry");
 
-  // ── 7. Add initial liquidity: 500 RSX + 5 WETH ──
+  // ── 7. Add initial liquidity ──
   console.log("\n─── Adding initial liquidity ───");
-  const liquidityShares = parseEther("500");
+  const liquidityShares = CHAIN_ID === 84532 ? parseEther("50") : parseEther("500");
 
   await waitTx(await walletClient.writeContract({
     address: shareTokenAddress, abi: shareTokenAbi, functionName: "approve", args: [dexAddress, liquidityShares],

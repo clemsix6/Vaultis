@@ -120,19 +120,18 @@ npm run dev
 
 The seed script deploys a complete demo environment: whitelists the admin, mints 3 watch NFTs with metadata, sets oracle prices, deploys a WatchShareToken for the first watch, wraps 5 ETH, deploys a SimpleDEX pool, and adds initial liquidity.
 
-### Testnet deployment (Base Sepolia)
+### Deployed addresses (Base Sepolia)
 
-```bash
-cd smart-contracts
-export BASE_SEPOLIA_RPC_URL=https://sepolia.base.org
-export PRIVATE_KEY=0x...
+The contracts are deployed on Base Sepolia (chain ID 84532) at the following addresses:
 
-npx hardhat ignition deploy ignition/modules/Deploy.ts --network baseSepolia
-npx tsx scripts/export-abis.ts
-npx tsx scripts/seed.ts
-```
+- **KYCRegistry**: `0x2e548bA5B0BEF60a663543714F2E44643E648F69`
+- **WatchNFT**: `0xB4faFE78C27F2704c6fdFADB709c192D6C023C60`
+- **WatchPriceOracle**: `0xA5d129c2B374fe1C825b8a902BE75C589Ae6d61B`
+- **WETH**: `0x1e1d904CF67f636Df2719507AE5191EFA60FAC58`
+- **WatchShareToken (RSX)**: `0xfd8d9e9594d96bb1b068ab462355103333b496e3`
+- **SimpleDEX**: `0xf16f65e127402457311d2c0251cdfe2929e132f3`
 
-The frontend is hosted on Vercel with the contract addresses configured as environment variables.
+The liquidity pool is seeded with 50 RSX and 0.01 WETH. Three watch NFTs are minted with oracle prices set.
 
 ## Testing
 
@@ -160,7 +159,3 @@ The smart contracts are written in **Solidity 0.8.28** using **OpenZeppelin v5**
 The frontend is a **Next.js 16** application (App Router) using **wagmi** for wallet connection and contract interactions, and **viem** as the underlying Ethereum library. The UI is built with **HeroUI** (component library), **Tailwind CSS** for styling, and **Framer Motion** for animations.
 
 The indexer is a **Node.js** service using **viem** to poll blockchain events and **better-sqlite3** for local persistence. It exposes a plain HTTP API (no framework, just `node:http`) to keep dependencies minimal.
-
-## Project
-
-Built for the Blockchain module — Epitech 2025-2026.
