@@ -18,7 +18,7 @@ export default defineConfig({
     },
     localhost: {
       type: "http",
-      url: "http://hardhat-node:8545",
+      url: process.env.HARDHAT_NODE_URL ?? "http://127.0.0.1:8545",
     },
     baseSepolia: {
       type: "http",

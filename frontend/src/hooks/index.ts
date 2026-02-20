@@ -26,4 +26,27 @@ export {
   useBatchWhitelist,
   useBatchBlacklist,
   useSetKYCRegistry,
+  useSetOraclePrice,
 } from "./useContractWrite";
+
+export { useWatchPrice, useOracleOwner } from "./useOracle";
+
+export {
+  useDEXReserves,
+  useGetAmountOut,
+  useSwap,
+  useApproveShareToken,
+  useApproveWETH,
+  useDepositWETH,
+  useShareTokenBalance,
+  useWETHBalance,
+} from "./useDEX";
+
+export { useIndexerEvents, useIndexerSwaps, useIndexerStatus } from "./useIndexer";
+
+export {
+  useKYCStatus,
+  useKYCSubmit,
+  useKYCRequests,
+  useKYCReview,
+} from "./useKYCSubmission";

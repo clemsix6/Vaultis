@@ -7,6 +7,8 @@ while ! nc -z hardhat-node 8545; do
 done
 echo "Hardhat node is up!"
 
+export HARDHAT_NODE_URL=http://hardhat-node:8545
+
 echo "Compiling contracts..."
 npx hardhat compile
 
@@ -21,14 +23,20 @@ DEPLOYED_FILE="ignition/deployments/chain-31337/deployed_addresses.json"
 
 KYC_ADDRESS=$(node -e "const d=JSON.parse(require('fs').readFileSync('$DEPLOYED_FILE','utf-8'));console.log(d['DeployModule#KYCRegistry'])")
 NFT_ADDRESS=$(node -e "const d=JSON.parse(require('fs').readFileSync('$DEPLOYED_FILE','utf-8'));console.log(d['DeployModule#WatchNFT'])")
+ORACLE_ADDRESS=$(node -e "const d=JSON.parse(require('fs').readFileSync('$DEPLOYED_FILE','utf-8'));console.log(d['DeployModule#WatchPriceOracle'])")
+WETH_ADDRESS=$(node -e "const d=JSON.parse(require('fs').readFileSync('$DEPLOYED_FILE','utf-8'));console.log(d['DeployModule#WETH'])")
 
 echo "KYCRegistry: $KYC_ADDRESS"
 echo "WatchNFT: $NFT_ADDRESS"
+echo "Oracle: $ORACLE_ADDRESS"
+echo "WETH: $WETH_ADDRESS"
 
 mkdir -p /shared
 cat > /shared/env-contracts <<EOF
 NEXT_PUBLIC_WATCH_NFT_ADDRESS=$NFT_ADDRESS
 NEXT_PUBLIC_KYC_REGISTRY_ADDRESS=$KYC_ADDRESS
+NEXT_PUBLIC_ORACLE_ADDRESS=$ORACLE_ADDRESS
+NEXT_PUBLIC_WETH_ADDRESS=$WETH_ADDRESS
 NEXT_PUBLIC_CHAIN_ID=31337
 EOF
 

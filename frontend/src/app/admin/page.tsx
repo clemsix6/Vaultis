@@ -6,7 +6,7 @@ import { useAccount } from "wagmi";
 import { Tabs, Tab } from "@heroui/react";
 import { useKYCOwner } from "@/hooks";
 import { ConnectButton } from "@/components/auth";
-import { KYCManagementTab, NFTManagementTab } from "@/components/admin";
+import { KYCManagementTab, KYCRequestsTab, NFTManagementTab, OracleManagementTab } from "@/components/admin";
 
 export default function AdminPage() {
   const { address, isConnected } = useAccount();
@@ -85,7 +85,7 @@ export default function AdminPage() {
             Panneau <span className="text-gradient-gold">Admin</span>
           </h1>
           <p className="text-gray-400">
-            Gérez les autorisations KYC et les NFTs.
+            Gerez les autorisations KYC, les NFTs et l&apos;oracle de prix.
           </p>
         </motion.div>
 
@@ -103,6 +103,11 @@ export default function AdminPage() {
               tab: "text-gray-400 data-[selected=true]:text-white",
             }}
           >
+            <Tab key="kyc-requests" title="Demandes KYC">
+              <div className="pt-6">
+                <KYCRequestsTab />
+              </div>
+            </Tab>
             <Tab key="kyc" title="Gestion KYC">
               <div className="pt-6">
                 <KYCManagementTab />
@@ -111,6 +116,11 @@ export default function AdminPage() {
             <Tab key="nft" title="Gestion NFT">
               <div className="pt-6">
                 <NFTManagementTab />
+              </div>
+            </Tab>
+            <Tab key="oracle" title="Oracle Prix">
+              <div className="pt-6">
+                <OracleManagementTab />
               </div>
             </Tab>
           </Tabs>

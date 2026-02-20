@@ -37,6 +37,30 @@ services:
         cp /shared/env-contracts .env.local 2>/dev/null || true
         npm run dev
 
+  indexer:
+    build: ./indexer
+    ports:
+      - "3001:3001"
+    depends_on:
+      deployer:
+        condition: service_completed_successfully
+    volumes:
+      - shared:/shared
+    entrypoint: /bin/sh
+    command:
+      - -c
+      - |
+        # Read contract addresses from shared env
+        if [ -f /shared/env-contracts ]; then
+          export $(cat /shared/env-contracts | xargs)
+        fi
+        export RPC_URL=http://hardhat-node:8545
+        export WATCH_NFT_ADDRESS=$NEXT_PUBLIC_WATCH_NFT_ADDRESS
+        export KYC_REGISTRY_ADDRESS=$NEXT_PUBLIC_KYC_REGISTRY_ADDRESS
+        export ORACLE_ADDRESS=$NEXT_PUBLIC_ORACLE_ADDRESS
+        export WETH_ADDRESS=$NEXT_PUBLIC_WETH_ADDRESS
+        npm start
+
 volumes:
   contracts-abi:
   shared:

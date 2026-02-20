@@ -6,6 +6,7 @@ import { useAccount } from "wagmi";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui";
 import { useWatchBalance, useIsAuthorized, useIsWhitelisted, useIsBlacklisted } from "@/hooks";
 import { UserHoldings } from "@/components/dashboard/UserHoldings";
+import { KYCForm } from "@/components/dashboard/KYCForm";
 import { ConnectButton } from "@/components/auth";
 
 export default function DashboardPage() {
@@ -116,11 +117,23 @@ export default function DashboardPage() {
           </Card>
         </motion.div>
 
+        {/* KYC Form (shown when not authorized) */}
+        {!isAuthorized && address && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="mb-8"
+          >
+            <KYCForm address={address} />
+          </motion.div>
+        )}
+
         {/* Holdings */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
+          transition={{ delay: 0.3 }}
         >
           <h2 className="text-xl font-bold text-white mb-6">Mes Investissements</h2>
           {address && balance !== undefined ? (

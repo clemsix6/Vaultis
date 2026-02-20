@@ -164,6 +164,37 @@ export function useBatchBlacklist() {
   return { batchBlacklist, hash, isPending, isConfirming, isSuccess, error };
 }
 
+export function useSetOraclePrice() {
+  const { data: hash, writeContract, isPending, error } = useWriteContract();
+  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
+    hash,
+  });
+
+  function setPrice(tokenId: bigint, price: bigint) {
+    const oracleAddress = process.env.NEXT_PUBLIC_ORACLE_ADDRESS as `0x${string}` | undefined;
+    if (!oracleAddress) return;
+    writeContract({
+      address: oracleAddress,
+      abi: [
+        {
+          type: "function",
+          name: "setPrice",
+          inputs: [
+            { name: "tokenId", type: "uint256" },
+            { name: "price", type: "uint256" },
+          ],
+          outputs: [],
+          stateMutability: "nonpayable",
+        },
+      ] as const,
+      functionName: "setPrice",
+      args: [tokenId, price],
+    });
+  }
+
+  return { setPrice, hash, isPending, isConfirming, isSuccess, error };
+}
+
 export function useSetKYCRegistry() {
   const { data: hash, writeContract, isPending, error } = useWriteContract();
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
