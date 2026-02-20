@@ -17,6 +17,7 @@ const RPC_URL = process.env.RPC_URL ?? "http://127.0.0.1:8545";
 const CHAIN_ID = Number(process.env.CHAIN_ID ?? "31337");
 const PORT = Number(process.env.PORT ?? "3001");
 const POLL_INTERVAL = Number(process.env.POLL_INTERVAL ?? "15000"); // 15s
+const START_BLOCK = Number(process.env.START_BLOCK ?? "0");
 
 const WATCH_NFT_ADDRESS = process.env.WATCH_NFT_ADDRESS as `0x${string}` | undefined;
 const KYC_REGISTRY_ADDRESS = process.env.KYC_REGISTRY_ADDRESS as `0x${string}` | undefined;
@@ -40,7 +41,8 @@ const events = {
 
 // ── In-memory tracking (last polled block) ──
 
-let lastPolledBlock = BigInt(getStoredLastBlock());
+const storedBlock = getStoredLastBlock();
+let lastPolledBlock = BigInt(storedBlock > 0 ? storedBlock : START_BLOCK);
 
 // ── Viem client ──
 
@@ -52,13 +54,18 @@ const client = createPublicClient({
 
 // ── Polling logic ──
 
+const MAX_BLOCK_RANGE = 9000n; // RPC limit is 10,000, keep margin
+
 async function pollEvents() {
   try {
     const currentBlock = await client.getBlockNumber();
     if (currentBlock <= lastPolledBlock) return;
 
+    // Cap range to MAX_BLOCK_RANGE to avoid RPC limits
     const fromBlock = lastPolledBlock + 1n;
-    const toBlock = currentBlock;
+    const toBlock = fromBlock + MAX_BLOCK_RANGE < currentBlock
+      ? fromBlock + MAX_BLOCK_RANGE
+      : currentBlock;
 
     console.log(`[indexer] Polling blocks ${fromBlock} → ${toBlock}`);
 
