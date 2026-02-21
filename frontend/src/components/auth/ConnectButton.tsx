@@ -1,12 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { useAccount, useConnect, useDisconnect, useBalance } from "wagmi";
-import { formatEther } from "viem";
+import { useAccount, useConnect, useDisconnect } from "wagmi";
 import { Shield, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui";
 import { useKYCStatus } from "@/hooks/useEmailKYC";
-import { useIsAuthorized } from "@/hooks";
+import { useIsAuthorized, useShareTokenBalance } from "@/hooks";
 import { EmailVerificationModal } from "./EmailVerificationModal";
 
 function formatAddress(address: string) {
@@ -19,26 +18,24 @@ export function ConnectButton() {
   const { disconnect } = useDisconnect();
   const { status: kycStatus, data: kycData, refetch } = useKYCStatus(address);
   const { data: onChainAuthorized } = useIsAuthorized(address);
-  const { data: balanceData } = useBalance({ address });
+  const { data: shareBalance } = useShareTokenBalance(address);
   const [showModal, setShowModal] = useState(false);
 
   if (isConnected && address) {
     const isVerified = kycStatus === "verified" || kycData?.whitelistedOnChain || onChainAuthorized;
-    const parsedBalance = balanceData ? parseFloat(formatEther(balanceData.value)) : NaN;
-    const ethBalance = !isNaN(parsedBalance)
-      ? `${parsedBalance.toFixed(2)} ${balanceData!.symbol}`
-      : null;
+    const rsxBal = shareBalance !== undefined ? Number(shareBalance) / 1e18 : NaN;
+    const rsxDisplay = !isNaN(rsxBal) ? `${rsxBal.toFixed(0)} RSX` : null;
 
     return (
       <>
         <div className="flex items-center gap-2">
-          {/* ETH balance */}
-          {ethBalance && (
+          {/* RSX balance */}
+          {rsxDisplay && (
             <span className="text-sm text-gold font-medium hidden sm:inline">
-              {ethBalance}
+              {rsxDisplay}
             </span>
           )}
-          {ethBalance && (
+          {rsxDisplay && (
             <span className="text-gray-600 hidden sm:inline">|</span>
           )}
           {/* Address */}
