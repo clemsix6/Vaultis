@@ -23,7 +23,7 @@ const app = express();
 const PORT = Number(process.env.PORT ?? 3001);
 const FRONTEND_URL = process.env.FRONTEND_URL ?? "http://localhost:3000";
 
-app.use(cors({ origin: [FRONTEND_URL, "http://localhost:3000", "http://localhost:3001"] }));
+app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
 
 // ── Simple in-memory rate limiter ──
