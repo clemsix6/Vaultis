@@ -2,22 +2,22 @@ import { WatchNFTABI, KYCRegistryABI, WatchShareTokenABI, WatchPriceOracleABI, S
 import { baseSepolia, hardhat } from "wagmi/chains";
 
 export const WATCH_NFT_ADDRESS = process.env
-  .NEXT_PUBLIC_WATCH_NFT_ADDRESS as `0x${string}` | undefined;
+  .NEXT_PUBLIC_WATCH_NFT_ADDRESS?.trim() as `0x${string}` | undefined;
 
 export const KYC_REGISTRY_ADDRESS = process.env
-  .NEXT_PUBLIC_KYC_REGISTRY_ADDRESS as `0x${string}` | undefined;
+  .NEXT_PUBLIC_KYC_REGISTRY_ADDRESS?.trim() as `0x${string}` | undefined;
 
 export const ORACLE_ADDRESS = process.env
-  .NEXT_PUBLIC_ORACLE_ADDRESS as `0x${string}` | undefined;
+  .NEXT_PUBLIC_ORACLE_ADDRESS?.trim() as `0x${string}` | undefined;
 
 export const WETH_ADDRESS = process.env
-  .NEXT_PUBLIC_WETH_ADDRESS as `0x${string}` | undefined;
+  .NEXT_PUBLIC_WETH_ADDRESS?.trim() as `0x${string}` | undefined;
 
 export const SHARE_TOKEN_ADDRESS = process.env
-  .NEXT_PUBLIC_SHARE_TOKEN_ADDRESS as `0x${string}` | undefined;
+  .NEXT_PUBLIC_SHARE_TOKEN_ADDRESS?.trim() as `0x${string}` | undefined;
 
 export const DEX_ADDRESS = process.env
-  .NEXT_PUBLIC_DEX_ADDRESS as `0x${string}` | undefined;
+  .NEXT_PUBLIC_DEX_ADDRESS?.trim() as `0x${string}` | undefined;
 
 export const INDEXER_URL = process.env
   .NEXT_PUBLIC_INDEXER_URL ?? "http://localhost:3001";
@@ -62,7 +62,7 @@ export const dexConfig = {
 } as const;
 
 export const MARKETPLACE_ADDRESS = process.env
-  .NEXT_PUBLIC_MARKETPLACE_ADDRESS as `0x${string}` | undefined;
+  .NEXT_PUBLIC_MARKETPLACE_ADDRESS?.trim() as `0x${string}` | undefined;
 
 export const marketplaceConfig = {
   address: MARKETPLACE_ADDRESS,
