@@ -1,5 +1,11 @@
 # Vaultis
 
+## Contributors
+
+- [clemsix6](https://github.com/clemsix6)
+- [SweathX](https://github.com/SweathX)
+- [xXx-Epitech-xXx](https://github.com/xXx-Epitech-xXx)
+
 Vaultis is a tokenized asset management platform for luxury watches, built on an EVM-compatible blockchain. The idea is straightforward: represent real-world watches as on-chain assets, let verified investors trade fractional shares of those watches, and keep everything compliant through an on-chain KYC system that can't be bypassed.
 
 A luxury watch worth 50,000 euros isn't accessible to most investors. But if you split it into 1,000 fungible tokens worth 50 euros each, anyone who passes KYC can buy a share. The watch is represented as a unique NFT (ERC-721) that holds its metadata — brand, model, serial number. The fractional shares are standard ERC-20 tokens tied to that NFT. Both token types enforce KYC at the smart contract level: if your address isn't whitelisted, you can't hold or trade any tokenized asset. Period.
