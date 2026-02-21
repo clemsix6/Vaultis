@@ -8,6 +8,11 @@ export const WatchMarketplaceABI = [
       },
       {
         "internalType": "address",
+        "name": "_paymentToken",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
         "name": "_kycRegistry",
         "type": "address"
       },
@@ -23,11 +28,6 @@ export const WatchMarketplaceABI = [
   {
     "inputs": [],
     "name": "AlreadyListed",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "IncorrectPayment",
     "type": "error"
   },
   {
@@ -65,11 +65,6 @@ export const WatchMarketplaceABI = [
       }
     ],
     "name": "OwnableUnauthorizedAccount",
-    "type": "error"
-  },
-  {
-    "inputs": [],
-    "name": "TransferFailed",
     "type": "error"
   },
   {
@@ -200,7 +195,7 @@ export const WatchMarketplaceABI = [
     ],
     "name": "buyWatch",
     "outputs": [],
-    "stateMutability": "payable",
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -275,7 +270,7 @@ export const WatchMarketplaceABI = [
       },
       {
         "internalType": "uint256",
-        "name": "priceInWei",
+        "name": "_price",
         "type": "uint256"
       }
     ],
@@ -301,7 +296,7 @@ export const WatchMarketplaceABI = [
       },
       {
         "internalType": "uint256",
-        "name": "priceInWei",
+        "name": "price",
         "type": "uint256"
       },
       {
@@ -362,6 +357,19 @@ export const WatchMarketplaceABI = [
   },
   {
     "inputs": [],
+    "name": "paymentToken",
+    "outputs": [
+      {
+        "internalType": "contract IERC20",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "renounceOwnership",
     "outputs": [],
     "stateMutability": "nonpayable",
@@ -376,6 +384,19 @@ export const WatchMarketplaceABI = [
       }
     ],
     "name": "setKYCRegistry",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_paymentToken",
+        "type": "address"
+      }
+    ],
+    "name": "setPaymentToken",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

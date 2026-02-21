@@ -271,7 +271,7 @@ function InventoryCard({ item }: { item: InventoryItem }) {
             <div className="flex items-center justify-between pt-3 border-t border-border">
               <span className="text-sm text-gray-400">Prix de vente</span>
               <span className="text-lg font-bold text-green-400">
-                {Number(formatEther(item.listingPrice)).toFixed(2)} ETH
+                {Number(formatEther(item.listingPrice)).toFixed(0)} RSX
               </span>
             </div>
             <Button
@@ -295,7 +295,7 @@ function InventoryCard({ item }: { item: InventoryItem }) {
             ) : (
               <div className="space-y-3">
                 <Input
-                  placeholder="Prix en ETH"
+                  placeholder="Prix en RSX"
                   type="number"
                   value={priceInput}
                   onChange={(e) => setPriceInput(e.target.value)}

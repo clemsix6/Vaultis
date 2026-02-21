@@ -3,6 +3,7 @@ pragma solidity 0.8.28;
 
 import {IERC721} from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import {IERC721Receiver} from "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 interface IKYCRegistry {
@@ -10,15 +11,13 @@ interface IKYCRegistry {
 }
 
 /// @title WatchMarketplace — NFT marketplace with escrow and KYC enforcement
-/// @notice Users can list WatchNFTs for sale; buyers pay in ETH.
+/// @notice Users can list WatchNFTs for sale; buyers pay in RSX (WatchShareToken).
 contract WatchMarketplace is IERC721Receiver, Ownable {
     // --- Errors ---
     error NotAuthorized();
     error NotSeller();
     error ListingNotActive();
-    error IncorrectPayment();
     error ZeroPriceNotAllowed();
-    error TransferFailed();
     error AlreadyListed();
 
     // --- Events ---
@@ -29,12 +28,13 @@ contract WatchMarketplace is IERC721Receiver, Ownable {
     // --- Structs ---
     struct Listing {
         address seller;
-        uint256 priceInWei;
+        uint256 price;
         bool isActive;
     }
 
     // --- State ---
     IERC721 public immutable watchNFT;
+    IERC20 public paymentToken;
     IKYCRegistry public kycRegistry;
 
     mapping(uint256 => Listing) public listings;
@@ -49,16 +49,18 @@ contract WatchMarketplace is IERC721Receiver, Ownable {
 
     constructor(
         address _watchNFT,
+        address _paymentToken,
         address _kycRegistry,
         address initialOwner
     ) Ownable(initialOwner) {
         watchNFT = IERC721(_watchNFT);
+        paymentToken = IERC20(_paymentToken);
         kycRegistry = IKYCRegistry(_kycRegistry);
     }
 
     /// @notice List a WatchNFT for sale. Caller must own the NFT and have approved this contract.
-    function listWatch(uint256 tokenId, uint256 priceInWei) external onlyKYCAuthorized {
-        if (priceInWei == 0) revert ZeroPriceNotAllowed();
+    function listWatch(uint256 tokenId, uint256 _price) external onlyKYCAuthorized {
+        if (_price == 0) revert ZeroPriceNotAllowed();
         if (listings[tokenId].isActive) revert AlreadyListed();
 
         // Transfer NFT to this contract (escrow)
@@ -66,14 +68,14 @@ contract WatchMarketplace is IERC721Receiver, Ownable {
 
         listings[tokenId] = Listing({
             seller: msg.sender,
-            priceInWei: priceInWei,
+            price: _price,
             isActive: true
         });
 
         _listingIndex[tokenId] = activeListingIds.length;
         activeListingIds.push(tokenId);
 
-        emit WatchListed(tokenId, msg.sender, priceInWei);
+        emit WatchListed(tokenId, msg.sender, _price);
     }
 
     /// @notice Cancel a listing and return the NFT to the seller.
@@ -90,25 +92,23 @@ contract WatchMarketplace is IERC721Receiver, Ownable {
         emit WatchDelisted(tokenId, msg.sender);
     }
 
-    /// @notice Buy a listed WatchNFT. Must send exact ETH amount.
-    function buyWatch(uint256 tokenId) external payable onlyKYCAuthorized {
+    /// @notice Buy a listed WatchNFT. Buyer must have approved this contract to spend RSX.
+    function buyWatch(uint256 tokenId) external onlyKYCAuthorized {
         Listing storage listing = listings[tokenId];
         if (!listing.isActive) revert ListingNotActive();
-        if (msg.value != listing.priceInWei) revert IncorrectPayment();
 
         address seller = listing.seller;
-        uint256 price = listing.priceInWei;
+        uint256 price = listing.price;
 
         // Effects before interactions
         listing.isActive = false;
         _removeFromActiveList(tokenId);
 
+        // Transfer RSX from buyer to seller
+        paymentToken.transferFrom(msg.sender, seller, price);
+
         // Transfer NFT to buyer
         watchNFT.transferFrom(address(this), msg.sender, tokenId);
-
-        // Send ETH to seller
-        (bool sent, ) = seller.call{value: price}("");
-        if (!sent) revert TransferFailed();
 
         emit WatchSold(tokenId, seller, msg.sender, price);
     }
@@ -136,6 +136,11 @@ contract WatchMarketplace is IERC721Receiver, Ownable {
     /// @notice Update the KYC registry address (owner only).
     function setKYCRegistry(address _kycRegistry) external onlyOwner {
         kycRegistry = IKYCRegistry(_kycRegistry);
+    }
+
+    /// @notice Update the payment token (owner only).
+    function setPaymentToken(address _paymentToken) external onlyOwner {
+        paymentToken = IERC20(_paymentToken);
     }
 
     /// @dev Required by IERC721Receiver to accept safeTransferFrom.

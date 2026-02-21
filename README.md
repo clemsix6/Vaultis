@@ -129,7 +129,7 @@ The contracts are deployed on Base Sepolia (chain ID 84532) at the following add
 - **WatchNFT**: `0xB4faFE78C27F2704c6fdFADB709c192D6C023C60`
 - **WatchPriceOracle**: `0xA5d129c2B374fe1C825b8a902BE75C589Ae6d61B`
 - **WETH**: `0x1e1d904CF67f636Df2719507AE5191EFA60FAC58`
-- **WatchMarketplace**: `0x0029559A8193a13Dc3E2018F0F61604Ebd2335C6`
+- **WatchMarketplace**: `0x905D186C1aaB94F5ff3DB59DE3cEbA5b5843A6f7`
 - **WatchShareToken (RSX)**: `0xfd8d9e9594d96bb1b068ab462355103333b496e3`
 - **SimpleDEX**: `0xf16f65e127402457311d2c0251cdfe2929e132f3`
 

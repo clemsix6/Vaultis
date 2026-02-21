@@ -81,7 +81,7 @@ export function WatchCard({ watch, index = 0 }: WatchCardProps) {
 
               {watch.isListed && watch.listingPrice ? (
                 <p className="text-lg font-bold text-green-400 ml-auto">
-                  {Number(formatEther(watch.listingPrice)).toFixed(2)} ETH
+                  {Number(formatEther(watch.listingPrice)).toFixed(0)} RSX
                 </p>
               ) : watch.estimatedValue ? (
                 <p className="text-lg font-bold text-gold ml-auto">

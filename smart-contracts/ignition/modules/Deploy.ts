@@ -13,8 +13,9 @@ export default buildModule("DeployModule", (m) => {
   // WETH mock for DEX
   const weth = m.contract("WETH", []);
 
-  // Marketplace
-  const marketplace = m.contract("WatchMarketplace", [watchNFT, kycRegistry, deployer]);
+  // Marketplace (pays in RSX — WatchShareToken deployed separately via seed)
+  // Uses WETH as placeholder payment token; real deployment points to WatchShareToken
+  const marketplace = m.contract("WatchMarketplace", [watchNFT, weth, kycRegistry, deployer]);
 
   return { kycRegistry, watchNFT, watchPriceOracle, weth, marketplace };
 });

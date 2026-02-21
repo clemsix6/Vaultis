@@ -78,7 +78,11 @@ const nftApprovalAbi = [
 ] as const;
 
 const marketplaceListAbi = [
-  { type: "function", name: "listWatch", inputs: [{ name: "tokenId", type: "uint256" }, { name: "priceInWei", type: "uint256" }], outputs: [], stateMutability: "nonpayable" },
+  { type: "function", name: "listWatch", inputs: [{ name: "tokenId", type: "uint256" }, { name: "price", type: "uint256" }], outputs: [], stateMutability: "nonpayable" },
+] as const;
+
+const marketplaceSetPaymentTokenAbi = [
+  { type: "function", name: "setPaymentToken", inputs: [{ name: "_paymentToken", type: "address" }], outputs: [], stateMutability: "nonpayable" },
 ] as const;
 
 async function main() {
@@ -201,23 +205,29 @@ async function main() {
   }));
   console.log("Marketplace whitelisted on KYCRegistry");
 
+  // Set the payment token to RSX (WatchShareToken)
+  await waitTx(await walletClient.writeContract({
+    address: marketplaceAddress, abi: marketplaceSetPaymentTokenAbi, functionName: "setPaymentToken", args: [shareTokenAddress],
+  }));
+  console.log("Marketplace payment token set to RSX:", shareTokenAddress);
+
   // Approve marketplace to transfer deployer's NFTs
   await waitTx(await walletClient.writeContract({
     address: watchNFTAddress, abi: nftApprovalAbi, functionName: "setApprovalForAll", args: [marketplaceAddress, true],
   }));
   console.log("Marketplace approved for NFT transfers");
 
-  // List watch #0 (Submariner Blue) at 5 ETH and watch #1 (Daytona Green) at 28 ETH
+  // List watch #0 (Submariner Blue) at 50 RSX and watch #1 (Daytona Green) at 200 RSX
   // Watch #2 stays in inventory (not listed)
   await waitTx(await walletClient.writeContract({
-    address: marketplaceAddress, abi: marketplaceListAbi, functionName: "listWatch", args: [0n, parseEther("5")],
+    address: marketplaceAddress, abi: marketplaceListAbi, functionName: "listWatch", args: [0n, parseEther("50")],
   }));
-  console.log("Watch #0 listed at 5 ETH");
+  console.log("Watch #0 listed at 50 RSX");
 
   await waitTx(await walletClient.writeContract({
-    address: marketplaceAddress, abi: marketplaceListAbi, functionName: "listWatch", args: [1n, parseEther("28")],
+    address: marketplaceAddress, abi: marketplaceListAbi, functionName: "listWatch", args: [1n, parseEther("200")],
   }));
-  console.log("Watch #1 listed at 28 ETH");
+  console.log("Watch #1 listed at 200 RSX");
 
   // ── Done ──
   console.log("\n════════════════════════════════════");

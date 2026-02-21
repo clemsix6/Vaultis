@@ -57,6 +57,7 @@ export {
   useListing,
   useListingsBatch,
   useApproveMarketplace,
+  useApproveRSXForMarketplace,
   useListWatch,
   useCancelListing,
   useBuyWatch,

@@ -15,6 +15,7 @@ import {
   useListing,
   useBuyWatch,
   useApproveMarketplace,
+  useApproveRSXForMarketplace,
   useListWatch,
   useCancelListing,
 } from "@/hooks";
@@ -154,7 +155,7 @@ export default function WatchDetailPage({ params }: { params: Promise<{ id: stri
                         <ShoppingCart className="w-4 h-4" /> Prix de vente
                       </span>
                       <span className="text-green-400 font-bold text-lg">
-                        {Number(formatEther(listingPrice)).toFixed(2)} ETH
+                        {Number(formatEther(listingPrice)).toFixed(0)} RSX
                       </span>
                     </div>
                   )}
@@ -218,6 +219,7 @@ function ActionButtons({
   const [showListForm, setShowListForm] = useState(false);
   const [priceInput, setPriceInput] = useState("");
 
+  const { approveRSX, isPending: rsxApprovePending, isConfirming: rsxApproveConfirming, isSuccess: rsxApproveSuccess } = useApproveRSXForMarketplace();
   const { buyWatch, isPending: buyPending, isConfirming: buyConfirming, isSuccess: buySuccess } = useBuyWatch();
   const { cancelListing, isPending: cancelPending, isConfirming: cancelConfirming } = useCancelListing();
   const { approve, isPending: approvePending, isConfirming: approveConfirming, isSuccess: approveSuccess } = useApproveMarketplace();
@@ -231,18 +233,30 @@ function ActionButtons({
 
   return (
     <div className="space-y-3">
-      {/* Listed + not seller → Buy */}
+      {/* Listed + not seller → Buy (2 steps: approve RSX then buy) */}
       {isListedOnMarketplace && !isSellerCurrentUser && listingPrice && (
-        <Button
-          className="w-full"
-          onClick={() => buyWatch(tokenId, listingPrice)}
-          isLoading={buyPending || buyConfirming}
-        >
-          <ShoppingCart className="w-4 h-4 mr-2" />
-          {buySuccess
-            ? "Acheté !"
-            : `Acheter pour ${Number(formatEther(listingPrice)).toFixed(2)} ETH`}
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            className="flex-1"
+            onClick={() => approveRSX(listingPrice)}
+            isLoading={rsxApprovePending || rsxApproveConfirming}
+            disabled={rsxApproveSuccess}
+          >
+            {rsxApproveSuccess ? "Approuvé" : "1. Approve RSX"}
+          </Button>
+          <Button
+            className="flex-1"
+            onClick={() => buyWatch(tokenId)}
+            isLoading={buyPending || buyConfirming}
+            disabled={!rsxApproveSuccess}
+          >
+            <ShoppingCart className="w-4 h-4 mr-2" />
+            {buySuccess
+              ? "Acheté !"
+              : `2. Acheter (${Number(formatEther(listingPrice)).toFixed(0)} RSX)`}
+          </Button>
+        </div>
       )}
 
       {/* Listed + seller → Cancel */}
@@ -267,7 +281,7 @@ function ActionButtons({
           ) : (
             <Card className="p-4 space-y-3">
               <Input
-                placeholder="Prix en ETH"
+                placeholder="Prix en RSX"
                 type="number"
                 value={priceInput}
                 onChange={(e) => setPriceInput(e.target.value)}

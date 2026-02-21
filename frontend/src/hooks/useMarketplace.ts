@@ -97,18 +97,36 @@ export function useCancelListing() {
   return { cancelListing, hash, isPending, isConfirming, isSuccess, error };
 }
 
+export function useApproveRSXForMarketplace() {
+  const { data: hash, writeContract, isPending, error } = useWriteContract();
+  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
+
+  function approveRSX(amount: bigint) {
+    if (!MARKETPLACE_ADDRESS) return;
+    const shareTokenAddress = process.env.NEXT_PUBLIC_SHARE_TOKEN_ADDRESS as `0x${string}` | undefined;
+    if (!shareTokenAddress) return;
+    writeContract({
+      address: shareTokenAddress,
+      abi: [{ type: "function", name: "approve", inputs: [{ name: "spender", type: "address" }, { name: "amount", type: "uint256" }], outputs: [{ type: "bool" }], stateMutability: "nonpayable" }] as const,
+      functionName: "approve",
+      args: [MARKETPLACE_ADDRESS, amount],
+    });
+  }
+
+  return { approveRSX, hash, isPending, isConfirming, isSuccess, error };
+}
+
 export function useBuyWatch() {
   const { data: hash, writeContract, isPending, error } = useWriteContract();
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
 
-  function buyWatch(tokenId: bigint, priceInWei: bigint) {
+  function buyWatch(tokenId: bigint) {
     if (!MARKETPLACE_ADDRESS) return;
     writeContract({
       address: MARKETPLACE_ADDRESS,
       abi: marketplaceConfig.abi,
       functionName: "buyWatch",
       args: [tokenId],
-      value: priceInWei,
     });
   }
 
