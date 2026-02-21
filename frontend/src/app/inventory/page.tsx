@@ -36,7 +36,7 @@ export default function InventoryPage() {
   const { data: shareBalance } = useShareTokenBalance(address);
 
   const count = balance !== undefined ? Number(balance) : 0;
-  const ethBal = ethBalanceData ? parseFloat(ethBalanceData.formatted) : NaN;
+  const ethBal = ethBalanceData ? parseFloat(formatEther(ethBalanceData.value)) : NaN;
   const rsxBal = shareBalance !== undefined ? Number(shareBalance) / 1e18 : NaN;
 
   // Fetch token IDs owned by user

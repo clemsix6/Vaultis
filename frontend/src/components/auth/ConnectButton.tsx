@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useAccount, useConnect, useDisconnect, useBalance } from "wagmi";
+import { formatEther } from "viem";
 import { Shield, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui";
 import { useKYCStatus } from "@/hooks/useEmailKYC";
@@ -23,7 +24,7 @@ export function ConnectButton() {
 
   if (isConnected && address) {
     const isVerified = kycStatus === "verified" || kycData?.whitelistedOnChain || onChainAuthorized;
-    const parsedBalance = balanceData ? parseFloat(balanceData.formatted) : NaN;
+    const parsedBalance = balanceData ? parseFloat(formatEther(balanceData.value)) : NaN;
     const ethBalance = !isNaN(parsedBalance)
       ? `${parsedBalance.toFixed(2)} ${balanceData!.symbol}`
       : null;
