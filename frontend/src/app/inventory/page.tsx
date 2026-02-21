@@ -230,8 +230,8 @@ function InventoryCard({ item }: { item: InventoryItem }) {
   const [showListForm, setShowListForm] = useState(false);
   const [priceInput, setPriceInput] = useState("");
 
-  const { approve, isPending: approvePending, isConfirming: approveConfirming, isSuccess: approveSuccess } = useApproveMarketplace();
-  const { listWatch, isPending: listPending, isConfirming: listConfirming, isSuccess: listSuccess } = useListWatch();
+  const { approve, isPending: approvePending, isConfirming: approveConfirming, isSuccess: approveSuccess, error: approveError } = useApproveMarketplace();
+  const { listWatch, isPending: listPending, isConfirming: listConfirming, isSuccess: listSuccess, error: listError } = useListWatch();
   const { cancelListing, isPending: cancelPending, isConfirming: cancelConfirming } = useCancelListing();
 
   const handleList = () => {
@@ -321,6 +321,16 @@ function InventoryCard({ item }: { item: InventoryItem }) {
                 </div>
                 {listSuccess && (
                   <p className="text-sm text-green-400 text-center">Mis en vente !</p>
+                )}
+                {approveError && (
+                  <p className="text-sm text-red-400 text-center">
+                    Approve: {approveError.message.slice(0, 100)}
+                  </p>
+                )}
+                {listError && (
+                  <p className="text-sm text-red-400 text-center">
+                    List: {listError.message.slice(0, 100)}
+                  </p>
                 )}
                 <Button
                   variant="ghost"

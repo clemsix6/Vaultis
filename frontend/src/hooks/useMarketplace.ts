@@ -51,7 +51,11 @@ export function useApproveMarketplace() {
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash });
 
   function approve() {
-    if (!WATCH_NFT_ADDRESS || !MARKETPLACE_ADDRESS) return;
+    if (!WATCH_NFT_ADDRESS || !MARKETPLACE_ADDRESS) {
+      console.error("useApproveMarketplace: missing addresses", { WATCH_NFT_ADDRESS, MARKETPLACE_ADDRESS });
+      return;
+    }
+    console.log("Approving marketplace", { nft: WATCH_NFT_ADDRESS, marketplace: MARKETPLACE_ADDRESS });
     writeContract({
       address: WATCH_NFT_ADDRESS,
       abi: watchNFTConfig.abi,
