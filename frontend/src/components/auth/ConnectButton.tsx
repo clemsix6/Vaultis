@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useAccount, useConnect, useDisconnect } from "wagmi";
-import { Shield, ShieldCheck } from "lucide-react";
+import { Shield, ShieldCheck, Copy, Check } from "lucide-react";
 import { Button } from "@/components/ui";
 import { useKYCStatus } from "@/hooks/useEmailKYC";
 import { useIsAuthorized, useShareTokenBalance } from "@/hooks";
@@ -21,6 +21,15 @@ export function ConnectButton() {
   const { data: shareBalance } = useShareTokenBalance(address);
   const [showModal, setShowModal] = useState(false);
 
+  const [copied, setCopied] = useState(false);
+
+  const copyAddress = async () => {
+    if (!address) return;
+    await navigator.clipboard.writeText(address);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   if (isConnected && address) {
     const isVerified = kycStatus === "verified" || kycData?.whitelistedOnChain || onChainAuthorized;
     const rsxBal = shareBalance !== undefined ? Number(shareBalance) / 1e18 : NaN;
@@ -38,10 +47,19 @@ export function ConnectButton() {
           {rsxDisplay && (
             <span className="text-gray-600 hidden sm:inline">|</span>
           )}
-          {/* Address */}
-          <span className="text-gray-400 text-sm hidden sm:inline">
+          {/* Address — click to copy */}
+          <button
+            onClick={copyAddress}
+            className="text-gray-400 text-sm hidden sm:inline-flex items-center gap-1 hover:text-white transition-colors"
+            title="Copier l'adresse"
+          >
             {formatAddress(address)}
-          </span>
+            {copied ? (
+              <Check className="w-3 h-3 text-green-400" />
+            ) : (
+              <Copy className="w-3 h-3" />
+            )}
+          </button>
           {/* KYC status — prominent button when not verified */}
           {isVerified ? (
             <span className="flex items-center gap-1 text-green-400 text-xs font-medium" title="KYC vérifié">
