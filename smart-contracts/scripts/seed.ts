@@ -73,6 +73,14 @@ const dexAddLiquidityAbi = [
   { type: "function", name: "addLiquidity", inputs: [{ name: "amountA", type: "uint256" }, { name: "amountB", type: "uint256" }], outputs: [{ name: "lpMinted", type: "uint256" }], stateMutability: "nonpayable" },
 ] as const;
 
+const nftApprovalAbi = [
+  { type: "function", name: "setApprovalForAll", inputs: [{ name: "operator", type: "address" }, { name: "approved", type: "bool" }], outputs: [], stateMutability: "nonpayable" },
+] as const;
+
+const marketplaceListAbi = [
+  { type: "function", name: "listWatch", inputs: [{ name: "tokenId", type: "uint256" }, { name: "priceInWei", type: "uint256" }], outputs: [], stateMutability: "nonpayable" },
+] as const;
+
 async function main() {
   const deployedPath = join(
     __dirname, "..", "ignition", "deployments", `chain-${CHAIN_ID}`, "deployed_addresses.json"
@@ -83,8 +91,9 @@ async function main() {
   const watchNFTAddress = addresses["DeployModule#WatchNFT"] as `0x${string}`;
   const oracleAddress = addresses["DeployModule#WatchPriceOracle"] as `0x${string}`;
   const wethAddress = addresses["DeployModule#WETH"] as `0x${string}`;
+  const marketplaceAddress = addresses["DeployModule#WatchMarketplace"] as `0x${string}`;
 
-  if (!kycRegistryAddress || !watchNFTAddress || !oracleAddress || !wethAddress) {
+  if (!kycRegistryAddress || !watchNFTAddress || !oracleAddress || !wethAddress || !marketplaceAddress) {
     throw new Error("Missing deployed addresses — did deploy succeed?");
   }
 
@@ -92,6 +101,7 @@ async function main() {
   console.log("WatchNFT:", watchNFTAddress);
   console.log("Oracle:", oracleAddress);
   console.log("WETH:", wethAddress);
+  console.log("Marketplace:", marketplaceAddress);
   console.log("RPC:", RPC_URL);
 
   const account = privateKeyToAccount(DEPLOYER_KEY);
@@ -184,11 +194,37 @@ async function main() {
   }));
   console.log(`Liquidity added: ${liquidityShares} RSX + ${wethAmount} WETH`);
 
+  // ── 8. Whitelist marketplace & list watches for sale ──
+  console.log("\n─── Setting up Marketplace ───");
+  await waitTx(await walletClient.writeContract({
+    address: kycRegistryAddress, abi: kycAbi, functionName: "whitelist", args: [marketplaceAddress],
+  }));
+  console.log("Marketplace whitelisted on KYCRegistry");
+
+  // Approve marketplace to transfer deployer's NFTs
+  await waitTx(await walletClient.writeContract({
+    address: watchNFTAddress, abi: nftApprovalAbi, functionName: "setApprovalForAll", args: [marketplaceAddress, true],
+  }));
+  console.log("Marketplace approved for NFT transfers");
+
+  // List watch #0 (Submariner Blue) at 5 ETH and watch #1 (Daytona Green) at 28 ETH
+  // Watch #2 stays in inventory (not listed)
+  await waitTx(await walletClient.writeContract({
+    address: marketplaceAddress, abi: marketplaceListAbi, functionName: "listWatch", args: [0n, parseEther("5")],
+  }));
+  console.log("Watch #0 listed at 5 ETH");
+
+  await waitTx(await walletClient.writeContract({
+    address: marketplaceAddress, abi: marketplaceListAbi, functionName: "listWatch", args: [1n, parseEther("28")],
+  }));
+  console.log("Watch #1 listed at 28 ETH");
+
   // ── Done ──
   console.log("\n════════════════════════════════════");
   console.log("Seed complete!");
   console.log("ShareToken:", shareTokenAddress);
   console.log("DEX Pool:", dexAddress);
+  console.log("Marketplace:", marketplaceAddress);
   console.log("════════════════════════════════════");
 }
 

@@ -7,6 +7,7 @@ import { Calendar, Wallet } from "lucide-react";
 import { Card } from "@/components/ui";
 import { Watch } from "@/types";
 import { formatPrice } from "@/lib/utils";
+import { formatEther } from "viem";
 
 interface WatchCardProps {
   watch: Watch;
@@ -18,6 +19,8 @@ function truncateAddress(address: string): string {
 }
 
 export function WatchCard({ watch, index = 0 }: WatchCardProps) {
+  const displayAddress = watch.isListed && watch.seller ? watch.seller : watch.owner;
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 30 }}
@@ -41,6 +44,13 @@ export function WatchCard({ watch, index = 0 }: WatchCardProps) {
                 Token #{watch.id}
               </span>
             </div>
+
+            {/* For sale badge */}
+            {watch.isListed && (
+              <div className="absolute top-3 left-3 px-3 py-1 rounded-full bg-green-500/80 backdrop-blur-sm">
+                <span className="text-sm text-white font-medium">A vendre</span>
+              </div>
+            )}
           </div>
 
           {/* Info */}
@@ -50,32 +60,35 @@ export function WatchCard({ watch, index = 0 }: WatchCardProps) {
               {watch.model}
             </h3>
 
-            {/* Owner */}
-            {watch.owner && (
+            {/* Owner / Seller */}
+            {displayAddress && (
               <div className="flex items-center gap-2 mb-3">
                 <Wallet className="w-3.5 h-3.5 text-gray-500" />
                 <span className="text-sm text-gray-400 font-mono">
-                  {truncateAddress(watch.owner)}
+                  {truncateAddress(displayAddress)}
                 </span>
               </div>
             )}
 
             {/* Year + Value */}
-            {(watch.year || watch.estimatedValue) && (
-              <div className="flex items-center justify-between pt-3 border-t border-border">
-                {watch.year ? (
-                  <div className="flex items-center gap-1.5">
-                    <Calendar className="w-3.5 h-3.5 text-gray-500" />
-                    <span className="text-sm text-gray-300">{watch.year}</span>
-                  </div>
-                ) : null}
-                {watch.estimatedValue ? (
-                  <p className="text-lg font-bold text-gold ml-auto">
-                    {formatPrice(watch.estimatedValue)}
-                  </p>
-                ) : null}
-              </div>
-            )}
+            <div className="flex items-center justify-between pt-3 border-t border-border">
+              {watch.year ? (
+                <div className="flex items-center gap-1.5">
+                  <Calendar className="w-3.5 h-3.5 text-gray-500" />
+                  <span className="text-sm text-gray-300">{watch.year}</span>
+                </div>
+              ) : <div />}
+
+              {watch.isListed && watch.listingPrice ? (
+                <p className="text-lg font-bold text-green-400 ml-auto">
+                  {Number(formatEther(watch.listingPrice)).toFixed(2)} ETH
+                </p>
+              ) : watch.estimatedValue ? (
+                <p className="text-lg font-bold text-gold ml-auto">
+                  {formatPrice(watch.estimatedValue)}
+                </p>
+              ) : null}
+            </div>
           </div>
         </Card>
       </Link>

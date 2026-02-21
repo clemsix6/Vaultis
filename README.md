@@ -30,7 +30,7 @@ Both contracts override the internal `_update()` function to check the KYC regis
 
 The **KYCRegistry** contract is the single source of truth for user authorization. It maintains a mapping of addresses to their status: whitelisted, blacklisted, or unknown. Only the contract owner can modify these statuses.
 
-The flow works like this: a user connects their wallet on the frontend and submits a KYC request with their email. This request is stored in the backend's SQLite database with a "pending" status. The admin sees it in the admin panel, reviews it, and if approved, sends two actions — marking the request as approved in the backend, and calling `whitelist()` on the KYCRegistry contract. The on-chain whitelist is what actually matters: without it, the user can't do anything with tokenized assets.
+The flow works like this: a user connects their wallet on the frontend and enters their email address. The backend generates a unique verification token, stores it in SQLite, and sends a verification email (via Resend in production, or logs the link to console in development). When the user clicks the verification link, the backend validates the token and automatically calls `whitelist()` on the KYCRegistry contract using the deployer's private key. No admin intervention is needed — the process is fully automated. The on-chain whitelist is what actually matters: without it, the user can't do anything with tokenized assets.
 
 Blacklisting works the same way in reverse. If a user needs to be revoked (regulatory issue, suspicious activity), the admin calls `blacklist()` and that address is immediately locked out of all token operations. The blacklist takes priority over the whitelist — if an address is blacklisted, it doesn't matter if it was previously whitelisted.
 
@@ -56,15 +56,15 @@ We use a custom oracle rather than Chainlink because Chainlink doesn't have pric
 
 Each price entry stores the value in wei and the timestamp of the update. The frontend reads these to display current estimated values on watch detail pages.
 
-### Indexer
+### Backend (Indexer + Auth)
 
-The indexer is a Node.js service that polls the blockchain for events and stores them in a local SQLite database. It also serves as the backend for KYC request management.
+The backend is an Express.js service that combines two responsibilities: blockchain event indexing and email-based KYC authentication.
 
-Every 15 seconds, the indexer queries the blockchain for new blocks and extracts relevant events: NFT transfers, share token transfers, swaps, liquidity operations, price updates, and KYC status changes (whitelist/blacklist). These events are stored in SQLite and exposed through a REST API that the frontend consumes.
+**Indexer.** Every 10 seconds, the service polls the blockchain for new blocks and extracts relevant events: KYC status changes, NFT mints and transfers, share token transfers, and DEX operations (swaps, liquidity adds/removes). Events are processed in chunks of 1,000 blocks and stored in SQLite. The REST API exposes these events to the frontend through endpoints like `/api/events`, `/api/trades`, and `/api/activity`.
 
 The reason for the indexer is simple: reading historical data directly from the blockchain is slow and limited. If a user swaps tokens through Etherscan (outside our UI), the change needs to appear in our frontend. The indexer catches these external interactions by watching the actual on-chain events, not just tracking what happens through our UI.
 
-The same service handles KYC request storage. When a user submits their email through the frontend, it goes to the indexer's API, gets stored in SQLite, and appears in the admin panel. This keeps the architecture simple — one backend service handles both blockchain event indexing and KYC state management.
+**Email KYC.** The same service handles the automated KYC verification flow. When a user registers their email via `/api/auth/register`, the backend generates a verification token (valid 24h), stores it in SQLite, and sends an email with a verification link. In development (no `RESEND_API_KEY`), the link is logged to the console. When the user clicks the link, `/api/auth/verify` validates the token and calls `whitelist()` on the KYCRegistry contract using the deployer's private key — fully automated, no admin review needed.
 
 SQLite was chosen over a full database server because the workload is small and the deployment is simple. One file, no daemon to manage, no connection pooling to configure. WAL mode is enabled for concurrent read performance.
 
@@ -82,7 +82,7 @@ This starts four services:
 - **hardhat-node** on port 8545 — local EVM blockchain
 - **deployer** — compiles contracts, deploys them, runs the seed script
 - **frontend** on port 3000 — Next.js application
-- **indexer** on port 3001 — blockchain polling + KYC backend
+- **backend** on port 3001 — Express.js server (email KYC, blockchain indexer, REST API)
 
 Once all containers are up, open `http://localhost:3000` and connect MetaMask to `localhost:8545` (chain ID 31337). Import the first Hardhat account (`0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80`) — this is the admin wallet that owns all contracts.
 
@@ -102,14 +102,15 @@ npx hardhat ignition deploy ignition/modules/Deploy.ts --network localhost
 npx tsx scripts/export-abis.ts
 npx tsx scripts/seed.ts
 
-# Terminal 3 — indexer
-cd indexer
+# Terminal 3 — backend
+cd backend
 npm install
-WATCH_NFT_ADDRESS=0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9 \
+RPC_URL=http://127.0.0.1:8545 \
+CHAIN_ID=31337 \
+PRIVATE_KEY=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80 \
 KYC_REGISTRY_ADDRESS=0x5FbDB2315678afecb367f032d93F642f64180aa3 \
-ORACLE_ADDRESS=0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0 \
-DEX_ADDRESS=0x0DCd1Bf9A1b36cE34237eEaFef220932846BCD82 \
-SHARE_TOKEN_ADDRESS=0xB7f8BC63BbcaD18155201308C8f3540b07f84F5e \
+WATCH_NFT_ADDRESS=0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9 \
+FRONTEND_URL=http://localhost:3000 \
 npm start
 
 # Terminal 4 — frontend
@@ -128,6 +129,7 @@ The contracts are deployed on Base Sepolia (chain ID 84532) at the following add
 - **WatchNFT**: `0xB4faFE78C27F2704c6fdFADB709c192D6C023C60`
 - **WatchPriceOracle**: `0xA5d129c2B374fe1C825b8a902BE75C589Ae6d61B`
 - **WETH**: `0x1e1d904CF67f636Df2719507AE5191EFA60FAC58`
+- **WatchMarketplace**: `0x0029559A8193a13Dc3E2018F0F61604Ebd2335C6`
 - **WatchShareToken (RSX)**: `0xfd8d9e9594d96bb1b068ab462355103333b496e3`
 - **SimpleDEX**: `0xf16f65e127402457311d2c0251cdfe2929e132f3`
 
@@ -158,4 +160,4 @@ The smart contracts are written in **Solidity 0.8.28** using **OpenZeppelin v5**
 
 The frontend is a **Next.js 16** application (App Router) using **wagmi** for wallet connection and contract interactions, and **viem** as the underlying Ethereum library. The UI is built with **HeroUI** (component library), **Tailwind CSS** for styling, and **Framer Motion** for animations.
 
-The indexer is a **Node.js** service using **viem** to poll blockchain events and **better-sqlite3** for local persistence. It exposes a plain HTTP API (no framework, just `node:http`) to keep dependencies minimal.
+The backend is an **Express.js** service using **viem** to poll blockchain events and whitelist wallets on-chain, **better-sqlite3** for local persistence, and **Resend** for transactional emails (KYC verification).

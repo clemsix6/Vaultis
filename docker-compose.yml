@@ -37,8 +37,8 @@ services:
         cp /shared/env-contracts .env.local 2>/dev/null || true
         npm run dev
 
-  indexer:
-    build: ./indexer
+  backend:
+    build: ./backend
     ports:
       - "3001:3001"
     depends_on:
@@ -50,15 +50,15 @@ services:
     command:
       - -c
       - |
-        # Read contract addresses from shared env
         if [ -f /shared/env-contracts ]; then
           export $(cat /shared/env-contracts | xargs)
         fi
         export RPC_URL=http://hardhat-node:8545
-        export WATCH_NFT_ADDRESS=$NEXT_PUBLIC_WATCH_NFT_ADDRESS
         export KYC_REGISTRY_ADDRESS=$NEXT_PUBLIC_KYC_REGISTRY_ADDRESS
-        export ORACLE_ADDRESS=$NEXT_PUBLIC_ORACLE_ADDRESS
-        export WETH_ADDRESS=$NEXT_PUBLIC_WETH_ADDRESS
+        export WATCH_NFT_ADDRESS=$NEXT_PUBLIC_WATCH_NFT_ADDRESS
+        export CHAIN_ID=31337
+        export FRONTEND_URL=http://localhost:3000
+        export PRIVATE_KEY=$PRIVATE_KEY
         npm start
 
 volumes:

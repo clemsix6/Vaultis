@@ -13,6 +13,9 @@ export interface Watch {
   year?: number;
   estimatedValue?: number;
   owner?: `0x${string}`;
+  isListed?: boolean;
+  listingPrice?: bigint;
+  seller?: `0x${string}`;
 }
 
 export interface WatchMetadata {

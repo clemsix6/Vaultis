@@ -9,9 +9,9 @@ import { ConnectButton } from "@/components/auth";
 
 const navigation = [
   { name: "Accueil", href: "/" },
-  { name: "Showroom", href: "/showroom" },
+  { name: "Marketplace", href: "/marketplace" },
+  { name: "Inventory", href: "/inventory" },
   { name: "Trade", href: "/trade" },
-  { name: "Dashboard", href: "/dashboard" },
   { name: "Admin", href: "/admin" },
 ];
 

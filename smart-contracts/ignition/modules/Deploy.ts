@@ -13,5 +13,8 @@ export default buildModule("DeployModule", (m) => {
   // WETH mock for DEX
   const weth = m.contract("WETH", []);
 
-  return { kycRegistry, watchNFT, watchPriceOracle, weth };
+  // Marketplace
+  const marketplace = m.contract("WatchMarketplace", [watchNFT, kycRegistry, deployer]);
+
+  return { kycRegistry, watchNFT, watchPriceOracle, weth, marketplace };
 });

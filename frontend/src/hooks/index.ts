@@ -46,7 +46,18 @@ export { useIndexerEvents, useIndexerSwaps, useIndexerStatus } from "./useIndexe
 
 export {
   useKYCStatus,
-  useKYCSubmit,
-  useKYCRequests,
-  useKYCReview,
-} from "./useKYCSubmission";
+  useRegisterEmail,
+  useResendVerification,
+  useVerifyToken,
+} from "./useEmailKYC";
+
+export {
+  useActiveListingCount,
+  useActiveListingIds,
+  useListing,
+  useListingsBatch,
+  useApproveMarketplace,
+  useListWatch,
+  useCancelListing,
+  useBuyWatch,
+} from "./useMarketplace";

@@ -192,13 +192,13 @@ export function HeroSection() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.7, duration: 0.6 }}
             >
-              <Link href="/showroom">
+              <Link href="/marketplace">
                 <Button
                   size="lg"
                   className="bg-gold hover:bg-gold-light text-[#030303] font-semibold px-8 h-12 text-base transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
                   endContent={<ArrowRight className="w-4 h-4 ml-1" />}
                 >
-                  Explorer le Showroom
+                  Explorer le Marketplace
                 </Button>
               </Link>
             </motion.div>
